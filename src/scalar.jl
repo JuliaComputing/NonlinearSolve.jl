@@ -22,25 +22,26 @@ end
 function scalar_nlsolve_ad(prob, alg, args...; kwargs...)
   f = prob.f
   p = value(prob.p)
-  u0 = value(prob.u0)
+  u0 = value.(prob.u0)
 
   newprob = NonlinearProblem(f, u0, p; prob.kwargs...)
   sol = solve(newprob, alg, args...; kwargs...)
 
   uu = getsolution(sol)
   if p isa Number
-    f_p = ForwardDiff.derivative(Base.Fix1(f, uu), p)
+    f_p = value(FiniteDiff.finite_difference_derivative(Base.Fix1(f, uu), p))
   else
-    f_p = ForwardDiff.gradient(Base.Fix1(f, uu), p)
+    f_p = value.(FiniteDiff.finite_difference_gradient(Base.Fix1(f, uu), prob.p))
   end
 
-  f_x = ForwardDiff.derivative(Base.Fix2(f, p), uu)
+  f_x = value(FiniteDiff.finite_difference_derivative(Base.Fix2(f, p), uu))
+
   pp = prob.p
   sumfun = let f_x′ = -f_x
     ((fp, p),) -> (fp / f_x′) * ForwardDiff.partials(p)
   end
   partials = sum(sumfun, zip(f_p, pp))
-  return sol, partials
+  return value(sol), partials
 end
 
 function solve(prob::NonlinearProblem{<:Number, iip, <:Dual{T,V,P}}, alg::NewtonRaphson, args...; kwargs...) where {iip, T, V, P}
