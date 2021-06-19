@@ -35,7 +35,7 @@ end
 function SciMLBase.init(prob::NonlinearProblem{uType, iip}, alg::AbstractNewtonAlgorithm, args...;
     alias_u0 = false,
     maxiters = 1000,
-    tol = 1e-6,
+    abstol = 1e-6,
     internalnorm = DEFAULT_NORM,
     kwargs...
   ) where {uType, iip}
@@ -54,7 +54,7 @@ function SciMLBase.init(prob::NonlinearProblem{uType, iip}, alg::AbstractNewtonA
     fu = f(u, p)
   end
   cache = alg_cache(alg, f, u, p, Val(iip))
-  return NewtonImmutableSolver(1, f, alg, u, fu, p, false, maxiters, internalnorm, DEFAULT, tol, cache, iip, prob)
+  return NewtonImmutableSolver(1, f, alg, u, fu, p, false, maxiters, internalnorm, DEFAULT, abstol, cache, iip, prob)
 end
 
 function SciMLBase.solve!(solver::AbstractImmutableNonlinearSolver)
